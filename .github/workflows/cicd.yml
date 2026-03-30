@@ -21,27 +21,12 @@ jobs:
         run: |
           docker build -t mohaamed007/flask_devops_demo:latest .
           docker push mohaamed007/flask_devops_demo:latest
-      - name: Check SSH port reachability
-        run: |
-          echo "Checking SSH connectivity to ${{ secrets.SSH_HOST }}:22"
-          for i in 1 2 3; do
-            if timeout 5 bash -c "</dev/tcp/${{ secrets.SSH_HOST }}/22"; then
-              echo "SSH port is reachable."
-              exit 0
-            fi
-            echo "SSH port not reachable yet, retrying in 5s..."
-            sleep 5
-          done
-          echo "SSH port 22 is not reachable from this runner."
-          exit 1
       - name: Deploy via SSH
         run: |
-          printf '%s' "${{ secrets.SSH_KEY }}" > key.pem
+          echo "${{ secrets.SSH_KEY }}" > key.pem
           chmod 600 key.pem
-          ssh -i key.pem -o BatchMode=yes -o StrictHostKeyChecking=no \
-          -o ConnectTimeout=10 -o ConnectionAttempts=6 \
-          -o ServerAliveInterval=15 -o ServerAliveCountMax=3 \
-          "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+          ssh -i key.pem -o StrictHostKeyChecking=no "${{ secrets.SSH_USER }}@${{ 
+          secrets.SSH_HOST }}" \
           "powershell -Executionpolicy Bypass -File 'C:\\Users\\pc\\TPCDSSH\\deploy.ps1' \
           -DockerUser ${{ secrets.DOCKERHUB_USERNAME }} 
           -DockerToken ${{ secrets.DOCKERHUB_TOKEN }}"
